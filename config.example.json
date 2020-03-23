@@ -1,0 +1,22 @@
+{
+    "this_application_url": "http://lvh.me:9000",
+    "web_pages_folder": "pages",
+    "command_path_prefix": "/cmd/",
+    "parameters_count_limit": 30,
+    "command_parameters_file_name": "command_parameters.json",
+    "oauth_verification_code_path": "/cmd/oauth_verification_code",
+    "js_settings_path": "/js/_settings.js",
+    "oauth_yandex": {
+        "client_id": "xxxxXXXxxxXXXxxxxXXXXXxxxxXXXXXx",
+        "client_secret": "xxXXxXXXXxXXXXXxxxXXXXxxxxXXXXxx"
+    },
+    "oauth_google": {
+        "client_id": "YYYYYYYYYYY-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.apps.googleusercontent.com",
+        "client_secret": "YYYYYyYyYyYYyYYYYYYYYYYY"
+    },
+    "oauth_github": {
+        "client_id": "YYYyyYYYYYYYYYYYyYYY",
+        "client_secret": "YYYyYYyYYYYYyyyyYYYYYYYYYYYYYYYyyyyyyyyy"
+    },
+    "db_connection_string": "sqlserver://user:password@localhost?database=databasename&connection+timeout=30"
+}

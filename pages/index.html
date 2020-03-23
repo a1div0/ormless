@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <noscript><meta http-equiv="refresh" content="0; URL=badbrowser.html"></noscript>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Balance</title>
+    <meta http-equiv="Content-Language" content="ru" />
+    <link rel="stylesheet" href="css/material.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+
+    <script src="js/lib/material.min.js"></script>
+    <script src="js/lib/showdown.min.js"></script>
+    <script src="js/_settings.js"></script>
+    <script src="js/lib/std.js"></script>
+    <script src="js/lib/cookie.js"></script>
+    <script src="js/pages/index.js"></script>
+  </head>
+<body>
+
+<div class="mdl-layout mdl-js-layout">
+  <header class="mdl-layout__header mdl-layout__header--scroll">
+    <div class="mdl-layout__header-row">
+      <!-- Title -->
+      <span class="mdl-layout-title">Balance</span>
+      <!-- Add spacer, to align navigation to the right -->
+      <div class="mdl-layout-spacer"></div>
+      <!-- Navigation -->
+      <nav class="mdl-navigation">
+          <button id="btn_login" class="mdl-button mdl-js-button" style="color:#FFFFFF">
+            Войти
+          </button>
+          <button id="btn_user" class="mdl-button mdl-js-button" style="color:#FFFFFF;display:none;">
+            User name
+          </button>
+      </nav>
+    </div>
+  </header>
+  <main class="mdl-layout__content">
+    <div class="page-content">
+        <!-- Your content goes here -->
+        <div class="mdl-grid">
+          <div class="mdl-cell mdl-cell--8-col"> <!-- Content row 1 -->
+
+<p class="markdown">
+    ## Для чего этот ресурс
+    Этот ресурс предназначен для отражения информации о доходах и расходах и дальнейшего анализа этих данных.
+    Может пригодиться для:
+    - ведения семейного бюджета;
+    - организации дружеского мероприятия, основанного на сборе средств;
+    - простого финансового анализа небоьшого проекта;
+    - другое подобное.
+
+    ## Как пользоваться
+    Пользоваться достаточно просто:
+    1. Необходимо авторизоваться.
+    2. Выбрать *проект* и настроить его.
+    3. Подключить к проекту другие аккаунты (других людей), если требуется.
+
+    Все настройки производятся в личном кабинете. Чтобы не регистрироваться лишний раз на очередном сайте
+    реализована авторизация по безопасному методу OAuth2 через популярные ресурсы: Яндекс или Google.
+</p>
+
+          </div> <!-- Content row 1 -->
+        </div>
+
+<!-- Подвал -->
+        <footer class="mdl-mini-footer">
+          <div class="mdl-mini-footer__left-section">
+            <div class="mdl-logo">© Robik studio 2019</div>
+            <ul class="mdl-mini-footer__link-list">
+              <li><a id="link_login" href="#">a.a.klenov@ya.ru</a></li>
+            </ul>
+          </div>
+        </footer>
+    </div>
+  </main>
+</div>
+
+<!-- Диалог авторизации -->
+<dialog class="mdl-dialog" style="width: 512px;">
+    <h4 class="mdl-dialog__title">Авторизация</h4>
+    <div class="mdl-dialog__content">
+      <p>
+        Вместо регистрации, воспользуйтесь существующей регистрацией в одной из
+        существующих систем:
+      </p>
+        <div class="auth-dialog__actions">
+        <button id="btn_yandex" class="mdl-button mdl-js-button">
+          Яндекс
+        </button>
+        <button id="btn_google" class="mdl-button mdl-js-button">
+          Google
+        </button>
+        <button id="btn_github" class="mdl-button mdl-js-button">
+          GitHub
+        </button>
+        </div>
+
+    </div>
+    <div class="mdl-dialog__actions">
+      <button type="button" class="mdl-button close">Отмена</button>
+    </div>
+  </dialog>
+
+
+</body>
+</html>
