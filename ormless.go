@@ -31,7 +31,13 @@ type OAuthConfiguration struct {
     ClientSecret string `json:"client_secret"`
 }
 
+type ServerEnvironmentParameters struct {
+    ListenIpParameterName string `json:"listen_ip_parameter_name"`
+    ListenPortParameterName string `json:"listen_port_parameter_name"`
+}
+
 type Configuration struct {
+    ServerEnvironment ServerEnvironmentParameters `json:"server_environment_parameters"`
     ThisApplicationUrl string `json:"this_application_url"`
     WebPagesFolder string `json:"web_pages_folder"`
     OAuthVerificationCodePath string `json:"oauth_verification_code_Path"`
@@ -95,7 +101,7 @@ var g_db MsSql
 func main() {
     var err error
 
-    err = config_init(&g_cfg);
+    err = config_init(&g_cfg)
     if err != nil {
         fmt.Println("Load config file: ", err)
         return
@@ -141,27 +147,43 @@ func main() {
     }
     g_oauth.AddService(&oauth_github)
 
-    APP_IP := os.Getenv("APP_IP")
-    APP_PORT := os.Getenv("APP_PORT")
+    ip := os.Getenv(g_cfg.ServerEnvironment.ListenIpParameterName)
+    port := os.Getenv(g_cfg.ServerEnvironment.ListenPortParameterName)
+
+    if ((ip == "") || (port == "")) {
+        fmt.Println("Server environment parameter ", g_cfg.ServerEnvironment.ListenIpParameterName, " or ", g_cfg.ServerEnvironment.ListenPortParameterName, " not set!")
+        return
+    }
+
+    ip_port := ip + ":" + port
+    fmt.Println("Ormless started")
+    fmt.Println("Web server listen: ", ip_port)
 
     http.HandleFunc("/", HomeRouterHandler) // установим роутер
-    err = http.ListenAndServe(APP_IP + ":" + APP_PORT, nil) // задаем слушать порт
+    err = http.ListenAndServe(ip_port, nil) // задаем слушать порт
     if err != nil {
         fmt.Println("Start listen port: ", err)
         return
     }
-
 }
 
 func config_init(cfg *Configuration) (error) {
 
-    const build_type = "development"; // production
-    filename := "config." + build_type + ".json"
+    config_file_name := "config.development.json"
 
-    file, err := os.Open(filename)
+    if _, err := os.Stat(config_file_name); err == nil {
+    } else if os.IsNotExist(err) {
+        config_file_name = "config.json"
+    } else {
+        return err
+    }
+
+    file, err := os.Open(config_file_name)
     if (err != nil) {
         return err
     }
+
+    fmt.Println("Config data loaded from: ", config_file_name)
 
     decoder := json.NewDecoder(file)
     return decoder.Decode(cfg)
