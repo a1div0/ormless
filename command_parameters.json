@@ -15,6 +15,7 @@
         "db_proc_name": "Entity.CategoryList",
         "call_method": "GET",
         "parameters": [
+            { "name" : "#user_id#", "type" : "int" },
             { "name" : "p", "type" : "int", "default" : "0" }
         ]
     }
