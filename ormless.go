@@ -10,13 +10,11 @@ package main
 import (
     "fmt" // пакет для форматированного ввода вывода
     "os"
-    //"context"
+    "github.com/spf13/viper" // для чтения файлов конфигурации, подтягивает безумное количество новых модулей (ок. 160)
     "net/http" // пакет для поддержки HTTP протокола
     "golang.org/x/crypto/acme/autocert" // пакет для работы с LetsEncrypt
     "strings" // пакет для работы с  UTF-8 строками
-    //"strconv"
-    //"reflect"
-    "encoding/json"
+    //"encoding/json"
     _ "github.com/denisenkom/go-mssqldb"
     "database/sql"
     "github.com/a1div0/oauth"
@@ -28,69 +26,11 @@ import (
 )
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-type OAuthConfiguration struct {
-    ClientId string `json:"client_id"`
-    ClientSecret string `json:"client_secret"`
-}
-
-type HttpsParam struct {
-    Enabled bool `json:"enabled"`
-    Port int `json:"port"`
-    Provider string `json:"provider"`
-    SubscriberEmail string `json:"subscriber_email"`
-    CertFolder string `json:"cert_folder"`
-    CertPemFilename string `json:"cert_pem_filename"`
-    KeyPemFilename string `json:"key_pem_filename"`
-}
-
-type WebPublicParameters struct {
-    DomainName string `json:"domain_name"`
-    HttpPort int `json:"http_port"`
-    Https HttpsParam `json:"https"`
-}
-
-type Configuration struct {
-    WebPublic WebPublicParameters `json:"web_public"`
-    WebPagesFolder string `json:"web_pages_folder"`
-    OAuthVerificationCodePath string `json:"oauth_verification_code_Path"`
-    JsSettingsPath string `json:"js_settings_Path"`
-    OAuthYandex OAuthConfiguration `json:"oauth_yandex"`
-    OAuthGoogle OAuthConfiguration `json:"oauth_google"`
-    OAuthGitHub OAuthConfiguration `json:"oauth_github"`
-    CommandPathPrefix string `json:"command_path_prefix"`
-    ParametersCountLimit int `json:"parameters_count_limit"`
-    CommandParametersFileName string `json:"command_parameters_file_name"`
-    DbConnectionString string `json:"db_connection_string"`
-}
-
-func (cfg *Configuration) ThisApplicationUrl() string {
-    var result string
-    var port int
-    var default_port int
-
-    if cfg.WebPublic.Https.Enabled {
-        result = "https://"
-        port = cfg.WebPublic.Https.Port
-        default_port = 443
-    } else {
-        result = "http://"
-        port = cfg.WebPublic.HttpPort
-        default_port = 80
-    }
-
-    result += cfg.WebPublic.DomainName
-    if port != default_port {
-        result += fmt.Sprintf(":%d", port)
-    }
-
-    return result
-}
-
 type MsSql struct {
     ConnectionString string
 }
 
-var g_cfg Configuration
+var g_cfg *viper.Viper
 var g_oauth oauth.OAuthCollect
 var g_webpages websrv.WebPages
 var g_dbman dbman.DataBaseManager
@@ -99,53 +39,53 @@ var g_db MsSql
 func main() {
     var err error
 
-    err = config_init(&g_cfg)
+    err = config_init()
     if err != nil {
         fmt.Println("Load config file: ", err)
         return
     }
 
     g_db := MsSql {
-        ConnectionString: g_cfg.DbConnectionString,
+        ConnectionString: g_cfg.GetString("DbConnectionString"),
     }
 
-    err = g_dbman.Init(&g_db, g_cfg.CommandParametersFileName, g_cfg.CommandPathPrefix, g_cfg.ParametersCountLimit)
+    err = g_dbman.Init(&g_db, g_cfg.GetString("CommandParametersFileName"), g_cfg.GetString("CommandPathPrefix"), g_cfg.GetInt("ParametersCountLimit"))
     if err != nil {
         fmt.Println("Database init: ", err)
         return
     }
 
-    err = g_webpages.Init(g_cfg.WebPagesFolder)
+    err = g_webpages.Init(g_cfg.GetString("WebPagesFolder"))
     if err != nil {
         fmt.Println("Webpages init: ", err)
         return
     }
 
-    err = g_oauth.Init(g_cfg.ThisApplicationUrl() + g_cfg.OAuthVerificationCodePath, g_cfg.ThisApplicationUrl(), false)
+    err = g_oauth.Init(this_application_url() + g_cfg.GetString("OAuthVerificationCodePath"), this_application_url(), false)
     if err != nil {
         fmt.Println("Load oauth: ", err)
         return
     }
 
     oauth_ya := oauth_yandex.OAuthYandex {
-        ClientId: g_cfg.OAuthYandex.ClientId,
-        ClientPsw: g_cfg.OAuthYandex.ClientSecret,
+        ClientId: g_cfg.GetString("OAuthYandex.ClientId"),
+        ClientPsw: g_cfg.GetString("OAuthYandex.ClientSecret"),
     }
     g_oauth.AddService(&oauth_ya)
 
     oauth_go := oauth_google.OAuthGoogle {
-        ClientId: g_cfg.OAuthGoogle.ClientId,
-        ClientSecret: g_cfg.OAuthGoogle.ClientSecret,
+        ClientId: g_cfg.GetString("OAuthGoogle.ClientId"),
+        ClientSecret: g_cfg.GetString("OAuthGoogle.ClientSecret"),
     }
     g_oauth.AddService(&oauth_go)
 
     oauth_github := oauth_github.OAuthGitHub {
-        ClientId: g_cfg.OAuthGitHub.ClientId,
-        ClientSecret: g_cfg.OAuthGitHub.ClientSecret,
+        ClientId: g_cfg.GetString("OAuthGitHub.ClientId"),
+        ClientSecret: g_cfg.GetString("OAuthGitHub.ClientSecret"),
     }
     g_oauth.AddService(&oauth_github)
 
-    err = web_server_go(&g_cfg)
+    err = web_server_go()
     if err != nil {
         fmt.Println(err)
     } else {
@@ -153,27 +93,51 @@ func main() {
     }
 }
 
-func web_server_go(cfg *Configuration) error {
+func this_application_url() string {
+    var result string
+    var port int
+    var default_port int
+
+    if g_cfg.GetBool("WebPublic.Https.Enabled") {
+        result = "https://"
+        port = g_cfg.GetInt("WebPublic.Https.Port")
+        default_port = 443
+    } else {
+        result = "http://"
+        port = g_cfg.GetInt("WebPublic.HttpPort")
+        default_port = 80
+    }
+
+    result += g_cfg.GetString("WebPublic.DomainName")
+    if port != default_port {
+        result += fmt.Sprintf(":%d", port)
+    }
+
+    return result
+}
+
+func web_server_go() error {
 
     var err error
 
     fmt.Println("Starting web server...")
-    http_ip_port := fmt.Sprintf(":%d", g_cfg.WebPublic.HttpPort)
+    http_ip_port := fmt.Sprintf(":%d", g_cfg.GetInt("WebPublic.HttpPort"))
 
-    if (cfg.WebPublic.Https.Enabled) {
+    if (g_cfg.GetBool("WebPublic.Https.Enabled")) {
 
         fmt.Println("SSL setup...")
-        https_ip_port := fmt.Sprintf(":%d", g_cfg.WebPublic.Https.Port)
+        https_ip_port := fmt.Sprintf(":%d", g_cfg.GetInt("WebPublic.Https.Port"))
+        ssl_provider := g_cfg.GetString("WebPublic.Https.Provider")
 
-        if g_cfg.WebPublic.Https.Provider == "letsencrypt" {
+        if ssl_provider == "letsencrypt" {
 
             mux := http.NewServeMux()
         	mux.HandleFunc("/", HomeHandler)
 
         	certManager := autocert.Manager{
         		Prompt: autocert.AcceptTOS,
-        		Cache:  autocert.DirCache(cfg.WebPublic.Https.CertFolder),
-                HostPolicy: autocert.HostWhitelist(cfg.WebPublic.DomainName),
+        		Cache:  autocert.DirCache(g_cfg.GetString("WebPublic.Https.CertFolder")),
+                HostPolicy: autocert.HostWhitelist(g_cfg.GetString("WebPublic.DomainName")),
         	}
 
         	server := &http.Server{
@@ -186,14 +150,14 @@ func web_server_go(cfg *Configuration) error {
 
             err = server.ListenAndServeTLS("", "")
 
-        } else if g_cfg.WebPublic.Https.Provider == "custom" {
+        } else if ssl_provider == "custom" {
 
             http.HandleFunc("/", HomeHandler)
             go http.ListenAndServe(http_ip_port, http.HandlerFunc(redirectToHttps))
-            err = http.ListenAndServeTLS(https_ip_port, g_cfg.WebPublic.Https.CertPemFilename, g_cfg.WebPublic.Https.KeyPemFilename, nil)
+            err = http.ListenAndServeTLS(https_ip_port, g_cfg.GetString("WebPublic.Https.CertPemFilename"), g_cfg.GetString("WebPublic.Https.KeyPemFilename"), nil)
 
         } else {
-            fmt.Errorf("Unknown SSL provider %s. Must be 'letsencrypt' or 'custom'.", g_cfg.WebPublic.Https.Provider)
+            fmt.Errorf("Unknown SSL provider %s. Must be 'letsencrypt' or 'custom'.", ssl_provider)
         }
 
     } else {
@@ -205,34 +169,32 @@ func web_server_go(cfg *Configuration) error {
 }
 
 func redirectToHttps(w http.ResponseWriter, r *http.Request) {
-    if g_cfg.WebPublic.Https.Enabled {
-        http.Redirect(w, r, g_cfg.ThisApplicationUrl() + r.RequestURI, http.StatusMovedPermanently)
+    if g_cfg.GetBool("WebPublic.Https.Enabled") {
+        http.Redirect(w, r, this_application_url() + r.RequestURI, http.StatusMovedPermanently)
     } else {
         fmt.Fprintf(w, "HTTP not enabled")
     }
 }
 
-func config_init(cfg *Configuration) (error) {
+func config_init() (error) {
 
-    config_file_name := "config.development.json"
+    config_file_name := "config-develop"
+    config_full_file_name := config_file_name + ".yml"
 
-    if _, err := os.Stat(config_file_name); err == nil {
+    if _, err := os.Stat(config_full_file_name); err == nil {
     } else if os.IsNotExist(err) {
-        config_file_name = "config.json"
+        config_file_name = "config"
     } else {
         return err
     }
 
-    file, err := os.Open(config_file_name)
-    if (err != nil) {
-        return err
-    }
-    defer file.Close()
+    fmt.Println("Config data load from: ", config_file_name)
 
-    fmt.Println("Config data loaded from: ", config_file_name)
-
-    decoder := json.NewDecoder(file)
-    return decoder.Decode(cfg)
+    g_cfg = viper.New()
+	g_cfg.SetConfigName(config_file_name)
+	g_cfg.AddConfigPath(".")
+	g_cfg.AutomaticEnv()
+	return g_cfg.ReadInConfig()
 }
 
 // При получении запроса от клиента
@@ -240,9 +202,9 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
     if (r.URL.Path == "/") {
         g_webpages.Page(w, "/index.html")
-    } else if (r.URL.Path == g_cfg.JsSettingsPath) {
+    } else if (r.URL.Path == g_cfg.GetString("JsSettingsPath")) {
         GetSettings(w)
-    } else if (strings.HasPrefix(r.URL.Path, g_cfg.CommandPathPrefix)) {
+    } else if (strings.HasPrefix(r.URL.Path, g_cfg.GetString("CommandPathPrefix"))) {
         err := ExecuteCommand(w, r)
         if (err != nil) {
             g_webpages.Response500(w, err)
@@ -256,7 +218,7 @@ fmt.Fprintf(w, "Hello secure world!")
 
 // Клиент запрашивает специальный файл с настройками "/js/_settings.js"
 func GetSettings(w http.ResponseWriter) {
-    oauth_settings := fmt.Sprintf("const THIS_APP_URL = \"%s\";\n", g_cfg.ThisApplicationUrl())
+    oauth_settings := fmt.Sprintf("const THIS_APP_URL = \"%s\";\n", this_application_url())
     oauth_settings += g_oauth.GetSettingsJS()
     fmt.Fprintf(w, oauth_settings)
 }
@@ -267,7 +229,7 @@ func ExecuteCommand(w http.ResponseWriter, r *http.Request) (error) {
     var err error
     r.ParseForm() //анализ аргументов
 
-    if (r.URL.Path == g_cfg.OAuthVerificationCodePath) {
+    if (r.URL.Path == g_cfg.GetString("OAuthVerificationCodePath")) {
         err = g_oauth.OnRecieveVerificationCode(w, r, &g_dbman);
     } else {
 
@@ -317,7 +279,7 @@ fmt.Printf("Raw arg_i: %+v\n", arg_i)
     query_text := "EXECUTE " + cmd_name + " " + argument_text
 fmt.Println(query_text)
     // всё что ниже - можно вынести в отдельный модуль, или часть - до получения результата, а парсинг результата в JSON - оставить здесь
-    db, err := sql.Open("sqlserver", g_cfg.DbConnectionString)
+    db, err := sql.Open("sqlserver", g_cfg.GetString("DbConnectionString"))
     if err != nil {
         return nil, err
     }
