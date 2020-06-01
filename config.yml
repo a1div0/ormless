@@ -1,22 +1,59 @@
-{
-    "this_application_url": "http://lvh.me:9000",
-    "web_pages_folder": "pages",
-    "command_path_prefix": "/cmd/",
-    "parameters_count_limit": 30,
-    "command_parameters_file_name": "command_parameters.json",
-    "oauth_verification_code_path": "/cmd/oauth_verification_code",
-    "js_settings_path": "/js/_settings.js",
-    "oauth_yandex": {
-        "client_id": "xxxxXXXxxxXXXxxxxXXXXXxxxxXXXXXx",
-        "client_secret": "xxXXxXXXXxXXXXXxxxXXXXxxxxXXXXxx"
-    },
-    "oauth_google": {
-        "client_id": "YYYYYYYYYYY-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.apps.googleusercontent.com",
-        "client_secret": "YYYYYyYyYyYYyYYYYYYYYYYY"
-    },
-    "oauth_github": {
-        "client_id": "YYYyyYYYYYYYYYYYyYYY",
-        "client_secret": "YYYyYYyYYYYYyyyyYYYYYYYYYYYYYYYyyyyyyyyy"
-    },
-    "db_connection_string": "sqlserver://user:password@localhost?database=databasename&connection+timeout=30"
-}
+#######################################################################
+# WEB PUBLIC OPTIONS                                                  #
+#######################################################################
+
+WebPublic:
+    DomainName: lvh.me
+    HttpPort: 80
+    HttpIp: 123.45.6.7
+    Https:
+        Enabled: false
+        Port: 443
+        Ip: 123.45.6.7
+
+        # Provider to use, possible values: custom, letsencrypt
+        Provider: letsencrypt
+
+        # ++++++ For letsencrypt only ++++++
+        SubscriberEmail: info@lvh.me
+        CertFolder: ssl
+
+        # ++++++ For custom only ++++++
+        CertPemFileName: ssl/cert.pem
+        KeyPemFileName: ssl/key.pem
+
+#######################################################################
+# WEB PAGES OPTIONS                                                   #
+#######################################################################
+
+WebPagesFolder: pages
+JsSettingsPath: /js/_settings.js
+
+#######################################################################
+# COMMAND OPTIONS                                                     #
+#######################################################################
+
+CommandPathPrefix: /cmd/
+ParametersCountLimit: 30
+CommandParametersFileName: command_parameters.json
+
+#######################################################################
+# OAUTH OPTIONS                                                       #
+#######################################################################
+
+OAuthVerificationCodePath: /cmd/oauth_verification_code
+OAuthYandex:
+    ClientId: aaa
+    ClientSecret: bbb
+OAuthGoogle:
+    ClientId: ccc
+    ClientSecret: ddd
+OAuthGitHub:
+    ClientId: eee
+    ClientSecret: fff
+
+#######################################################################
+# DATABASE OPTIONS                                                    #
+#######################################################################
+
+DbConnectionString: sqlserver://user:pawword@localhost?database=test&connection+timeout=30

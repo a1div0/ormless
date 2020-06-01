@@ -95,38 +95,36 @@ func main() {
 
 func this_application_url() string {
     var result string
-    var port int
-    var default_port int
 
-    if g_cfg.GetBool("WebPublic.Https.Enabled") {
-        result = "https://"
-        port = g_cfg.GetInt("WebPublic.Https.Port")
-        default_port = 443
-    } else {
-        result = "http://"
-        port = g_cfg.GetInt("WebPublic.HttpPort")
-        default_port = 80
+    with_s := g_cfg.GetBool("WebPublic.Https.Enabled")
+    s := ""
+
+    if with_s {
+        s = "e"
     }
 
-    result += g_cfg.GetString("WebPublic.DomainName")
-    if port != default_port {
-        result += fmt.Sprintf(":%d", port)
-    }
-
-    return result
+    return "http" + s + "://" + g_cfg.GetString("WebPublic.DomainName")
 }
 
 func web_server_go() error {
 
     var err error
 
-    fmt.Println("Starting web server...")
-    http_ip_port := fmt.Sprintf(":%d", g_cfg.GetInt("WebPublic.HttpPort"))
+    http_ip := g_cfg.GetString("WebPublic.HttpIp")
+    if http_ip == "localhost" || http_ip == "127.0.0.1" {
+        http_ip = ""
+    }
+    http_ip_port := fmt.Sprintf("%s:%d", http_ip, g_cfg.GetInt("WebPublic.HttpPort"))
+    fmt.Println("Starting web server. Listen: %s", http_ip_port)
 
     if (g_cfg.GetBool("WebPublic.Https.Enabled")) {
 
-        fmt.Println("SSL setup...")
-        https_ip_port := fmt.Sprintf(":%d", g_cfg.GetInt("WebPublic.Https.Port"))
+        https_ip := g_cfg.GetString("WebPublic.Https.Ip")
+        if https_ip == "localhost" || https_ip == "127.0.0.1" {
+            https_ip = ""
+        }
+        https_ip_port := fmt.Sprintf("%s:%d", https_ip, g_cfg.GetInt("WebPublic.Https.Port"))
+        fmt.Println("Starting SSL. Listen: %s", https_ip_port)
         ssl_provider := g_cfg.GetString("WebPublic.Https.Provider")
 
         if ssl_provider == "letsencrypt" {
