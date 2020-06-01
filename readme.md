@@ -34,11 +34,11 @@
 WebPublic:
     DomainName: lvh.me
     HttpPort: 80
-	HttpIp: localhost
+    HttpIp: localhost
     Https:
         Enabled: false
         Port: 443
-		Ip: localhost
+        Ip: localhost
         Provider: letsencrypt
 
         SubscriberEmail: info@lvh.me
