@@ -210,8 +210,6 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
     } else {
         g_webpages.Page(w, r.URL.Path)
     }
-
-fmt.Fprintf(w, "Hello secure world!")
 }
 
 // Клиент запрашивает специальный файл с настройками "/js/_settings.js"
